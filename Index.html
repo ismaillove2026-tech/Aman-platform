@@ -1,0 +1,163 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#102c46">
+<title>AMAN | أمان لإدارة القروض</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f2f5f9;color:#182b40}
+header{background:#102c46;color:white;padding:25px 18px}
+.brand{font-size:29px;font-weight:bold;color:#65dfc0}
+header p{margin-bottom:0;color:#d7e5ef}
+main{max-width:950px;margin:auto;padding:18px}
+.card{background:white;border-radius:14px;padding:18px;margin-bottom:16px;box-shadow:0 3px 14px #142d4510}
+h2{font-size:19px;margin-top:0}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.stat{background:#eaf5f5;border-radius:12px;padding:15px}
+.stat strong{display:block;font-size:22px;color:#087e76;margin-top:8px}
+label{display:block;margin:12px 0 6px;font-weight:bold}
+input,select{width:100%;padding:12px;border:1px solid #ccd6df;border-radius:8px;font-size:16px;background:white}
+button{border:0;border-radius:9px;padding:12px 17px;background:#087e76;color:white;font-size:16px;font-weight:bold;cursor:pointer}
+button.secondary{background:#102c46}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.loan{border:1px solid #e0e6ed;padding:13px;border-radius:10px;margin-top:10px}
+small{color:#607386}
+footer{text-align:center;padding:25px;color:#718096}
+</style>
+</head>
+<body>
+<header>
+<div class="brand">AMAN | أمان</div>
+<p>منصتك الذكية لتتبع القروض والأقساط</p>
+</header>
+
+<main>
+<section class="card">
+<h2>لوحة التحكم</h2>
+<div class="stats">
+<div class="stat">عدد القروض<strong id="count">0</strong></div>
+<div class="stat">إجمالي القروض<strong id="total">0 MAD</strong></div>
+<div class="stat">الأقساط المسجلة<strong id="paid">0 MAD</strong></div>
+<div class="stat">المتبقي<strong id="remaining">0 MAD</strong></div>
+</div>
+</section>
+
+<section class="card">
+<h2>إضافة قرض جديد</h2>
+<form id="loanForm">
+<label>اسم الشخص أو الشركة</label>
+<input id="customer" required placeholder="مثال: محمد">
+
+<label>البنك أو المؤسسة الممولة</label>
+<select id="bank">
+<option>Attijariwafa Bank</option>
+<option>Banque Populaire</option>
+<option>Bank of Africa</option>
+<option>CIH Bank</option>
+<option>Crédit du Maroc</option>
+<option>BMCI</option>
+<option>Crédit Agricole du Maroc</option>
+<option>Al Barid Bank</option>
+<option>CFG Bank</option>
+<option>البنك التشاركي</option>
+<option>أخرى</option>
+</select>
+
+<label>مبلغ القرض بالدرهم</label>
+<input id="amount" type="number" min="0.01" step="0.01" required>
+
+<label>القسط الشهري بالدرهم</label>
+<input id="installment" type="number" min="0.01" step="0.01" required>
+
+<label>تاريخ بداية القرض</label>
+<input id="date" type="date" required>
+
+<button type="submit" style="width:100%;margin-top:18px">إضافة القرض</button>
+</form>
+</section>
+
+<section class="card">
+<h2>قائمة القروض</h2>
+<div id="loans"><small>لا توجد قروض مسجلة حالياً.</small></div>
+</section>
+
+<section class="card">
+<h2>الاشتراك</h2>
+<p>استعمل النسخة التجريبية من AMAN.</p>
+<p><b>Free:</b> 0 MAD</p>
+<p><b>Pro:</b> 99 MAD / الشهر (سعر مقترح)</p>
+<p><b>Business:</b> 249 MAD / الشهر (سعر مقترح)</p>
+<small>الاشتراكات المدفوعة غير مفعلة بعد.</small>
+</section>
+
+<div class="actions">
+<button class="secondary" onclick="changeLanguage()">Français / العربية</button>
+</div>
+</main>
+
+<footer>AMAN © 2026 — جميع الحقوق محفوظة</footer>
+
+<script>
+let loans=[];
+const money=n=>Number(n).toLocaleString('fr-MA',{maximumFractionDigits:2})+' MAD';
+
+function render(){
+document.getElementById('count').textContent=loans.length;
+let total=loans.reduce((s,l)=>s+l.amount,0);
+let paid=loans.reduce((s,l)=>s+l.paid,0);
+document.getElementById('total').textContent=money(total);
+document.getElementById('paid').textContent=money(paid);
+document.getElementById('remaining').textContent=money(total-paid);
+let list=document.getElementById('loans');
+list.innerHTML='';
+if(!loans.length){list.innerHTML='<small>لا توجد قروض مسجلة حالياً.</small>';return;}
+loans.forEach((l,i)=>{
+let div=document.createElement('div');
+div.className='loan';
+let title=document.createElement('b');
+title.textContent=l.customer+' — '+l.bank;
+let details=document.createElement('p');
+details.textContent='القرض: '+money(l.amount)+' | القسط: '+money(l.installment)+' | تاريخ البداية: '+l.date;
+let remaining=document.createElement('p');
+remaining.textContent='المتبقي: '+money(l.amount-l.paid);
+let btn=document.createElement('button');
+btn.textContent='تسجيل أداء قسط';
+btn.onclick=()=>{
+let value=Number(prompt('أدخل مبلغ الأداء بالدرهم:'));
+if(!Number.isFinite(value)||value<=0||value>l.amount-l.paid)return;
+l.paid+=value;render();
+};
+let del=document.createElement('button');
+del.textContent='حذف';
+del.className='secondary';
+del.onclick=()=>{if(confirm('هل تريد حذف هذا القرض؟')){loans.splice(i,1);render();}};
+div.append(title,details,remaining,btn,del);
+list.appendChild(div);
+});
+}
+
+document.getElementById('loanForm').addEventListener('submit',e=>{
+e.preventDefault();
+let amount=Number(document.getElementById('amount').value);
+let installment=Number(document.getElementById('installment').value);
+if(amount<=0||installment<=0)return;
+loans.push({
+customer:document.getElementById('customer').value,
+bank:document.getElementById('bank').value,
+amount,installment,paid:0,
+date:document.getElementById('date').value
+});
+e.target.reset();
+render();
+});
+
+function changeLanguage(){
+alert('La version française complète sera ajoutée dans une prochaine version.');
+}
+render();
+</script>
+</body>
+</html>
